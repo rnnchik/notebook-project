@@ -114,9 +114,17 @@ builderColumn.prototype = {
 			this.itemsNode = document.createElement('div');
 			this.itemsNode.className = `notes--list`;
 
+			// localStorage.setItem('arrayItems', this.items);
+			//
+			// console.log(localStorage.getItem('arrayItems'));
+
+			// area.value = localStorage.getItem('area');
+			// area.oninput = () => {
+			// 	localStorage.setItem('area', area.value)
+			// };
+
 			for (let i = 0; i < this.items.length; i++) {
 				let itemElement = this.items[i];
-
 				itemElement = new builderItem({
 					itemId: itemElement.id,
 					itemText: itemElement.text,
@@ -167,7 +175,10 @@ function builderItem(options)
 	this.itemNode = null;
 	this.itemNodeText = null;
 	this.itemCloseBtn = null;
+	this.itemChangeTextarea = null;
 	this.itemChangeBtn = null;
+
+	console.log(this.itemText);
 }
 
 builderItem.prototype = {
@@ -177,7 +188,6 @@ builderItem.prototype = {
 		{
 			this.itemNode = document.createElement('div');
 			this.itemNode.className = 'notes--list-item';
-			console.log(this.itemText);
 			if (this.itemText)
 			{
 				this.itemNodeText = document.createElement('div');
@@ -185,23 +195,62 @@ builderItem.prototype = {
 				this.itemNodeText.innerText = this.itemText;
 				this.itemNode.appendChild(this.itemNodeText);
 			}
+			if (!this.itemChangeTextarea)
+			{
+				this.itemChangeTextarea = document.createElement('textarea');
+				this.itemChangeTextarea.className = 'notes--list-item__textarea';
+				this.itemNode.appendChild(this.itemChangeTextarea);
+			}
 			if (!this.itemChangeBtn)
 			{
 				this.itemChangeBtn = document.createElement('div');
 				this.itemChangeBtn.className = 'notes--list-item__change';
 				this.itemChangeBtn.innerText = 'Изменить';
-				this.itemChangeBtn.setAttribute('data-change', '');
+				this.itemChangeBtn.setAttribute('data-change', 'change');
+				this.itemChangeBtn.addEventListener('click', this.changeItem.bind(this));
 				this.itemNode.appendChild(this.itemChangeBtn);
 			}
 			if (!this.itemCloseBtn)
 			{
 				this.itemCloseBtn = document.createElement('div');
 				this.itemCloseBtn.className = 'notes--list-item__delete';
+				this.itemCloseBtn.setAttribute('title', 'Удалить');
 				this.itemCloseBtn.setAttribute('data-delete', '');
+				this.itemCloseBtn.addEventListener('click', this.deleteItem.bind(this));
 				this.itemNode.appendChild(this.itemCloseBtn);
+
 			}
 
 			return this.itemNode;
+		}
+	},
+
+	deleteItem: function ()
+	{
+		this.itemNode.remove();
+		console.log('хз как удалить элемент из исходного массива');
+	},
+
+	changeItem: function ()
+	{
+		if (this.itemChangeBtn.getAttribute('data-change') === 'change')
+		{
+			this.itemNodeText.style.display = 'none';
+			this.itemChangeTextarea.innerText = this.itemText;
+			this.itemChangeTextarea.style.display = 'block';
+			this.itemChangeBtn.setAttribute('data-change', 'save');
+			this.itemChangeBtn.innerText = 'Сохранить';
+		}
+		else
+		{
+			this.itemNodeText.innerText = this.itemChangeTextarea.value;
+			this.itemText = this.itemChangeTextarea.value;
+			this.itemNodeText.style.display = 'block';
+			this.itemChangeTextarea.style.display = 'none';
+			this.itemChangeBtn.setAttribute('data-change', 'change');
+			this.itemChangeBtn.innerText = 'Изменить';
+			console.log('хз как изменить исходный элемент из массива');
+			return this.itemText;
 		}
 	},
 
@@ -244,7 +293,7 @@ let Block = new builder({
 		},
 		{
 			id: '3',
-			text: 'Text any again. Text',
+			text: 'Сайт рыбатекст поможет дизайнеру, верстальщику, вебмастеру сгенерировать несколько абзацев.',
 			columnId: '3dd'
 
 		},

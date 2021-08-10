@@ -42,7 +42,7 @@ body {
 .notes--list-item {
 	display: block;
 	width: 100%;
-	padding: 10px;
+	padding: 15px 20px;
 	background: #fff;
 	box-sizing: border-box;
 	margin-bottom: 20px;
@@ -71,20 +71,37 @@ body {
 
 .notes--form {
 	box-sizing: border-box;
-	padding: 15px 20px;
-}
-
-.notes--form {
 	display: flex;
 }
 
-.notes--input {
-
+.notes--list-item__change {
+	display: block;
+	margin-top: 20px;
+	text-align: center;
+	text-transform: uppercase;
+	background: #000;
+	color: #fff;
+	padding: 10px 20px;
+	box-sizing: border-box;
+	font-size: 14px;
+	border: 1px solid #000;
+	cursor: pointer;
+	transition: .4s;
 }
 
+.notes--list-item__change:hover {
+	color: #000;
+	background: transparent;
+}
 
-ui-btn ui-btn-sm ui-btn-light ui-btn-icon-angle-down
-ui-btn ui-btn-sm ui-btn-light ui-btn-icon-angle-down
+.notes--input {
+	flex: 1;
+}
 
-tasks-scrum-sprint-header-tick
-tasks-scrum-sprint-header-tick
+.notes--list-item__textarea {
+	display: none;
+	width: 100%;
+	font-size: 16px;
+	box-sizing: border-box;
+	padding: 10px;
+}
