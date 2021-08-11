@@ -96,6 +96,8 @@ builderColumn.prototype = {
 				this.buttonNode.className = 'notes--button';
 				this.buttonNode.innerText = 'Добавить';
 
+				this.buttonNode.addEventListener('click', this.addItem.bind(this));
+
 				if (this.id)
 				{
 					this.buttonNode.setAttribute('data-column-id', this.id);
@@ -135,6 +137,20 @@ builderColumn.prototype = {
 
 			this.columnNode.appendChild(this.itemsNode);
 		}
+	},
+
+	addItem: function (event)
+	{
+		event.preventDefault();
+		if (this.inputNode.value !== '')
+		{
+			let itemElement = new builderItem({
+				itemText: this.inputNode.value,
+			});
+			this.inputNode.value = '';
+			this.itemsNode.appendChild(itemElement.render());
+		}
+		console.log('хз как добавить элемент из исходного массива');
 	},
 
 	getColumn: function ()
@@ -250,6 +266,7 @@ builderItem.prototype = {
 			this.itemChangeBtn.setAttribute('data-change', 'change');
 			this.itemChangeBtn.innerText = 'Изменить';
 			console.log('хз как изменить исходный элемент из массива');
+			console.log(this.itemText);
 			return this.itemText;
 		}
 	},
