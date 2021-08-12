@@ -1,6 +1,4 @@
-"use strict"
-
-function builder(options)
+function Builder(options)
 {
 	this.renderTo = options.renderTo || document.getElementById('app');
 	this.className = options.className || null;
@@ -9,7 +7,7 @@ function builder(options)
 	this.container = null;
 }
 
-builder.prototype = {
+Builder.prototype = {
 	getContainer: function ()
 	{
 		if(!this.container)
@@ -40,16 +38,50 @@ builder.prototype = {
 		return columnArrayItems;
 	},
 
+	getItems: function (id)
+	{
+		return this.items;
+	},
+
+	changeItemArray: function (id, text)
+	{
+		for (let i = 0; i < this.items.length; i++) {
+			let items = this.items[i];
+			if (items.id === id)
+			{
+				console.log(this.items);
+				items.text = text;
+
+				break;
+			}
+		}
+	},
+
+	delItemArray: function (id)
+	{
+		for (let i = 0; i < this.items.length; i++) {
+			let items = this.items[i];
+			if (items.id === id)
+			{
+				this.items.splice([i], 1);
+
+				console.log(this.items);
+				break;
+			}
+		}
+	},
 
 	render: function ()
 	{
 		for (let i = 0; i < this.columns.length; i++) {
 			let columnElement = this.columns[i];
 
-			columnElement = new builderColumn({
+			columnElement = new BuilderColumn({
+				builder: this,
 				columnId: columnElement.id,
 				columnTitle: columnElement.name,
 				columnItems: this.getArrayItems(columnElement.id),
+
 			});
 
 			this.getContainer().appendChild(columnElement.render());
@@ -61,28 +93,27 @@ builder.prototype = {
 
 
 
-
-
-function builderColumn(options)
+function BuilderColumn(options)
 {
 	this.id = options.columnId || null;
 	this.title = options.columnTitle || null;
 	this.items = options.columnItems || null;
+	this.builder = options.builder;
+
 	this.columnNode = null;
 	this.titleNode = null;
-
 	this.itemsNode = null;
 	this.formNode = null;
 	this.inputNode = null;
 	this.buttonNode = null;
 }
 
-builderColumn.prototype = {
+BuilderColumn.prototype = {
 	getForm: function ()
 	{
 		if (!this.formNode)
 		{
-			this.formNode = document.createElement('form');
+			this.formNode = document.createElement('div');
 			this.formNode.className = `notes--form`;
 			if (!this.inputNode)
 			{
@@ -116,18 +147,11 @@ builderColumn.prototype = {
 			this.itemsNode = document.createElement('div');
 			this.itemsNode.className = `notes--list`;
 
-			// localStorage.setItem('arrayItems', this.items);
-			//
-			// console.log(localStorage.getItem('arrayItems'));
-
-			// area.value = localStorage.getItem('area');
-			// area.oninput = () => {
-			// 	localStorage.setItem('area', area.value)
-			// };
-
 			for (let i = 0; i < this.items.length; i++) {
 				let itemElement = this.items[i];
-				itemElement = new builderItem({
+
+				itemElement = new BuilderItem({
+					builder: this.builder,
 					itemId: itemElement.id,
 					itemText: itemElement.text,
 				});
@@ -139,18 +163,37 @@ builderColumn.prototype = {
 		}
 	},
 
-	addItem: function (event)
+	addItem: function ()
 	{
-		event.preventDefault();
 		if (this.inputNode.value !== '')
 		{
-			let itemElement = new builderItem({
+			let itemId = '';
+			if (this.builder.items.length > 0)
+			{
+				itemId = String(+this.builder.items[this.builder.items.length - 1].id + 1);
+			}
+			else
+			{
+				itemId = '0';
+			}
+
+			this.builder.getItems(this.id).push({
+				id: itemId,
+				text: this.inputNode.value,
+				columnId: this.id
+			});
+
+			let itemElement = new BuilderItem({
+				builder: this.builder,
+				itemId: itemId,
 				itemText: this.inputNode.value,
 			});
+			console.log(this.builder.items);
+
 			this.inputNode.value = '';
+
 			this.itemsNode.appendChild(itemElement.render());
 		}
-		console.log('хз как добавить элемент из исходного массива');
 	},
 
 	getColumn: function ()
@@ -184,8 +227,9 @@ builderColumn.prototype = {
 	}
 }
 
-function builderItem(options)
+function BuilderItem(options)
 {
+	this.builder = options.builder;
 	this.itemId = options.itemId || null;
 	this.itemText = options.itemText || null;
 	this.itemNode = null;
@@ -193,17 +237,16 @@ function builderItem(options)
 	this.itemCloseBtn = null;
 	this.itemChangeTextarea = null;
 	this.itemChangeBtn = null;
-
-	console.log(this.itemText);
 }
 
-builderItem.prototype = {
+BuilderItem.prototype = {
 	getItem: function ()
 	{
 		if (!this.itemNode)
 		{
 			this.itemNode = document.createElement('div');
 			this.itemNode.className = 'notes--list-item';
+			this.itemNode.setAttribute('data-item-id', this.itemId);
 			if (this.itemText)
 			{
 				this.itemNodeText = document.createElement('div');
@@ -243,8 +286,8 @@ builderItem.prototype = {
 
 	deleteItem: function ()
 	{
+		this.builder.delItemArray(this.itemNode.getAttribute('data-item-id'));
 		this.itemNode.remove();
-		console.log('хз как удалить элемент из исходного массива');
 	},
 
 	changeItem: function ()
@@ -265,9 +308,8 @@ builderItem.prototype = {
 			this.itemChangeTextarea.style.display = 'none';
 			this.itemChangeBtn.setAttribute('data-change', 'change');
 			this.itemChangeBtn.innerText = 'Изменить';
-			console.log('хз как изменить исходный элемент из массива');
-			console.log(this.itemText);
-			return this.itemText;
+
+			this.builder.changeItemArray(this.itemNode.getAttribute('data-item-id'), this.itemChangeTextarea.value);
 		}
 	},
 
@@ -280,7 +322,31 @@ builderItem.prototype = {
 
 
 
-let Block = new builder({
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let Block = new Builder({
 	renderTo: document.getElementById('app'),
 	className: 'notes--container flex',
 	columns: [
