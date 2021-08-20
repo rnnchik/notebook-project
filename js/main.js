@@ -1,6 +1,6 @@
 function Builder(options)
 {
-	this.renderTo = options.renderTo || document.getElementById('app');
+	this.renderTo = options.renderTo || null;
 	this.className = options.className || null;
 	this.columns = options.columns || null;
 	this.items = options.items || null;
@@ -25,9 +25,9 @@ Builder.prototype = {
 
 	getArrayItems: function (columnId)
 	{
-		let columnArrayItems = [];
-		for (let i = 0; i < this.items.length; i++) {
-			let columnItem = this.items[i];
+		var columnArrayItems = [];
+		for (var i = 0; i < this.items.length; i++) {
+			var columnItem = this.items[i];
 
 			if (columnItem.columnId === columnId)
 			{
@@ -45,8 +45,8 @@ Builder.prototype = {
 
 	changeItemArray: function (id, text)
 	{
-		for (let i = 0; i < this.items.length; i++) {
-			let items = this.items[i];
+		for (var i = 0; i < this.items.length; i++) {
+			var items = this.items[i];
 			if (items.id === id)
 			{
 				console.log(this.items);
@@ -55,12 +55,14 @@ Builder.prototype = {
 				break;
 			}
 		}
+
+		return this.items;
 	},
 
 	delItemArray: function (id)
 	{
-		for (let i = 0; i < this.items.length; i++) {
-			let items = this.items[i];
+		for (var i = 0; i < this.items.length; i++) {
+			var items = this.items[i];
 			if (items.id === id)
 			{
 				this.items.splice([i], 1);
@@ -69,25 +71,29 @@ Builder.prototype = {
 				break;
 			}
 		}
+
+		return this.items;
 	},
 
 	render: function ()
 	{
-		for (let i = 0; i < this.columns.length; i++) {
-			let columnElement = this.columns[i];
+		if (this.renderTo)
+		{
+			for (var i = 0; i < this.columns.length; i++) {
+				var columnElement = this.columns[i];
 
-			columnElement = new BuilderColumn({
-				builder: this,
-				columnId: columnElement.id,
-				columnTitle: columnElement.name,
-				columnItems: this.getArrayItems(columnElement.id),
+				columnElement = new BuilderColumn({
+					builder: this,
+					columnId: columnElement.id,
+					columnTitle: columnElement.name,
+					columnItems: this.getArrayItems(columnElement.id),
+				});
 
-			});
+				this.getContainer().appendChild(columnElement.render());
+			}
 
-			this.getContainer().appendChild(columnElement.render());
+			this.renderTo.appendChild(this.getContainer());
 		}
-
-		this.renderTo.appendChild(this.getContainer());
 	},
 }
 
@@ -120,14 +126,22 @@ BuilderColumn.prototype = {
 				this.inputNode = document.createElement('input');
 				this.inputNode.className = 'notes--input';
 				this.formNode.appendChild(this.inputNode);
+				this.inputNode.addEventListener('keydown', function(e) {
+						if (e.keyCode === 13) {
+							this.addItem();
+						}
+					}.bind(this));
 			}
 			if (!this.buttonNode)
 			{
 				this.buttonNode = document.createElement('button');
 				this.buttonNode.className = 'notes--button';
 				this.buttonNode.innerText = 'Добавить';
-
-				this.buttonNode.addEventListener('click', this.addItem.bind(this));
+				console.log(this);
+				// this.buttonNode.addEventListener('click', this.addItem.bind(this));
+				this.buttonNode.addEventListener('click', function() {
+					this.addItem();
+				}.bind(this));
 
 				if (this.id)
 				{
@@ -136,8 +150,9 @@ BuilderColumn.prototype = {
 			}
 
 			this.formNode.appendChild(this.buttonNode);
-			this.columnNode.appendChild(this.formNode);
 		}
+
+		return this.formNode;
 	},
 
 	getItems: function ()
@@ -147,8 +162,8 @@ BuilderColumn.prototype = {
 			this.itemsNode = document.createElement('div');
 			this.itemsNode.className = `notes--list`;
 
-			for (let i = 0; i < this.items.length; i++) {
-				let itemElement = this.items[i];
+			for (var i = 0; i < this.items.length; i++) {
+				var itemElement = this.items[i];
 
 				itemElement = new BuilderItem({
 					builder: this.builder,
@@ -158,16 +173,16 @@ BuilderColumn.prototype = {
 
 				this.itemsNode.appendChild(itemElement.render());
 			}
-
-			this.columnNode.appendChild(this.itemsNode);
 		}
+
+		return this.itemsNode;
 	},
 
 	addItem: function ()
 	{
 		if (this.inputNode.value !== '')
 		{
-			let itemId = '';
+			var itemId = '';
 			if (this.builder.items.length > 0)
 			{
 				itemId = String(+this.builder.items[this.builder.items.length - 1].id + 1);
@@ -183,7 +198,7 @@ BuilderColumn.prototype = {
 				columnId: this.id
 			});
 
-			let itemElement = new BuilderItem({
+			var itemElement = new BuilderItem({
 				builder: this.builder,
 				itemId: itemId,
 				itemText: this.inputNode.value,
@@ -215,8 +230,9 @@ BuilderColumn.prototype = {
 				this.columnNode.appendChild(this.titleNode);
 			}
 
-			this.getItems();
-			this.getForm();
+			this.columnNode.appendChild(this.getItems());
+			this.columnNode.appendChild(this.getForm());
+
 			return this.columnNode;
 		}
 	},
@@ -232,6 +248,7 @@ function BuilderItem(options)
 	this.builder = options.builder;
 	this.itemId = options.itemId || null;
 	this.itemText = options.itemText || null;
+
 	this.itemNode = null;
 	this.itemNodeText = null;
 	this.itemCloseBtn = null;
@@ -259,6 +276,11 @@ BuilderItem.prototype = {
 				this.itemChangeTextarea = document.createElement('textarea');
 				this.itemChangeTextarea.className = 'notes--list-item__textarea';
 				this.itemNode.appendChild(this.itemChangeTextarea);
+				this.itemChangeTextarea.addEventListener('keydown', function(e) {
+					if (e.keyCode === 13) {
+						this.changeItem();
+					}
+				}.bind(this));
 			}
 			if (!this.itemChangeBtn)
 			{
@@ -299,6 +321,7 @@ BuilderItem.prototype = {
 			this.itemChangeTextarea.style.display = 'block';
 			this.itemChangeBtn.setAttribute('data-change', 'save');
 			this.itemChangeBtn.innerText = 'Сохранить';
+			this.itemChangeTextarea.focus();
 		}
 		else
 		{
@@ -346,7 +369,7 @@ BuilderItem.prototype = {
 
 
 
-let Block = new Builder({
+var Block = new Builder({
 	renderTo: document.getElementById('app'),
 	className: 'notes--container flex',
 	columns: [
